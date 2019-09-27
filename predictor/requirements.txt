@@ -1,0 +1,8 @@
+gevent
+gunicorn
+keras == 2.1.4
+numpy
+h5py
+pillow
+tensorflow == 1.5
+scikit-image
