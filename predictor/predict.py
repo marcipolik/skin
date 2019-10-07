@@ -26,45 +26,39 @@ from PIL.ExifTags import TAGS
 from keras.models import load_model as load_keras_model
 
 models = dict()
-labels = dict()
+labels = None
 
 
 def _model_predict(model_name, pil_img):
     model = models[model_name]
-    model_labels = labels[model_name]
-    
+
     image_size = int(model.input.shape[1])                 
 
     img = pil_img.resize((image_size, image_size))
     x = image.img_to_array(img)
     x = np.expand_dims(x, axis=0)
 
-    prediction_array = model.predict(x)[0]    
-    
-    pred = np.argmax(prediction_array)
-    prediction = model_labels[str(pred)]    
+    prediction_array = model.predict(x)[0]
+    print(str(prediction_array))
 
-    confidence = prediction_array[pred]    
-
-    return prediction_array, prediction, confidence
+    return prediction_array
     
     
 def predict(pil_img):
-    model_labels = labels['']
-        
-    normal_prediction_array, _, _ = _model_predict('', pil_img)
+    ensemble_prediction = np.array([0] * len(labels), dtype='float64')
+    for key in models:
+        prediction_array = _model_predict(key, pil_img)
+        ensemble_prediction += np.array(prediction_array)
 
-    prediction_array = normal_prediction_array
+    ensemble_prediction /= len(labels)
 
-    normal_pred = np.argmax(normal_prediction_array)       
-                        
-    pred = np.argmax(prediction_array)
-    prediction = model_labels[str(pred)]
-    confidence = prediction_array[pred]
-                        
-    print('Predicted:', prediction + "; " + str(confidence) + "; " + str(prediction_array))
+    pred = np.argmax(ensemble_prediction)
+    prediction = labels[pred]
+    confidence = ensemble_prediction[pred]
 
-    return model_labels, prediction_array, prediction, confidence
+    print('Predicted:', prediction + "; " + str(confidence) + "; " + str(ensemble_prediction))
+
+    return ensemble_prediction, prediction, confidence
 
 
 def load_models(models_root):    
@@ -73,6 +67,13 @@ def load_models(models_root):
     
     model_dir = models_root
     print("\nDIR: " + model_dir)
+
+    label_file = os.path.join(model_dir, "labels.json")
+    print("Loading labels: " + str(label_file))
+    with open(label_file) as fp:
+        labels = json.load(fp)
+        print("Labels:" + str(labels))
+    print("Labels loaded.")
 
     for file in os.listdir(model_dir):
         if file.endswith(".model"):
@@ -86,14 +87,17 @@ def load_models(models_root):
             print("Model loaded.")
 
             models[model_name] = model
-        
-            file = file[:-6] + ".labels.json"
 
-            print("Loading labels: " + file)
-            with open(file) as fp:
-                labels[model_name] = json.load(fp)
-            print("Labels loaded.")
-            
+
+def test_prediction():
+    for file in os.listdir("test"):
+        print(file)
+        file_path = os.path.join("test", file)
+
+        img = Image.open(file_path)
+
+        predict(img)
+
 
 if __name__ == "__main__":
     load_models('models')
