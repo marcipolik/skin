@@ -18,18 +18,41 @@ To use Skin, you will need the following libraries installed:
 * tensorflow == 1.5
 * scikit-image
 
+Skin uses Python3.
+
 ## Installation
 
 You can download Skin from GitHub.
 ```git
 git clone https://github.com/atomrom/skin.git
 ```
+## Preprocess data
+
+To use ISIC dataset you should download input data, metadata and groundtruth from the ISIC website (2019 version: https://challenge2019.isic-archive.com/data.html)
+Files:
+
+* ISIC_2019_Training_Input.zip
+* ISIC_2019_Training_Metadata.csv
+* ISIC_2019_Training_GroundTruth.csv
+
+First edit the /train/dataset/isic_to_dirs.py and add the isic files path and the desired target directory.
+
+After the script unpacked the images to separate folders you should run create_validation_and_test_set.py.
+
+The parameters are:
+* --dry_run : If True it does not copy the files. Default value is False.
+* --dataset_dir : Root directory of the training, validation, and test datasets. Default value is 'clinic'
+* --source_dir : Root directory of dataset to be split. See the step above. 
+* --validation_percent : Percent of the validation set. Default value is 10 percent.
+* --test_percent : Percent of the validation set. Default value is 10 percent.
+
+It creates the training, test and validation set from the data. 
 
 ## Usage
 
 ### Train:
 Parameters:
-* --dataset_dir : Root directory of the training, validation, and test datasets.
+* --dataset_dir : Root directory of the training, validation, and test datasets. (See steps above)
 * --image_size : Image size.
 * --model_name : Model name
 * --learning_rate : Learning rate
